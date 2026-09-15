@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B站抽签 · 书签脚本安装</title>
+<style>
+  body{font:15px/1.7 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;max-width:680px;margin:0 auto;padding:24px 16px;color:#18191c;background:#f5f6f8}
+  h1{font-size:20px;margin:0 0 12px}
+  h2{font-size:16px;margin:24px 0 8px}
+  .drag{display:block;text-align:center;padding:18px 10px;margin:12px 0;border:2px dashed #fb7299;border-radius:12px;
+        color:#fb7299;font-size:17px;font-weight:700;text-decoration:none;background:#fff}
+  .drag:active{background:#fff0f4}
+  code,pre,textarea{font:13px/1.5 Consolas,Menlo,monospace}
+  textarea{width:100%;height:150px;padding:10px;border:1px solid #e3e5e7;border-radius:8px;background:#fff;word-break:break-all}
+  button{padding:8px 16px;border:none;border-radius:8px;background:#fb7299;color:#fff;font-size:14px;cursor:pointer}
+  ol li,ul li{margin:6px 0}
+  .note{color:#9499a0;font-size:13px}
+</style>
+</head>
+<body>
+<h1>🎲 B站收藏夹抽签 · 书签脚本安装</h1>
+<p>装一次，之后在 B 站收藏夹页面<b>点一下书签</b>即可随机抽取，弹窗显示 BV 号，确认后直接打开视频。无需任何服务、无需部署。</p>
+
+<h2>安装（二选一）</h2>
+<p><b>方式一（推荐）：拖拽</b> —— 显示书签栏（Ctrl+Shift+B），然后把下面这个按钮<b>按住拖到书签栏</b>松手：</p>
+<a id="bm" class="drag" href="javascript:(async()=>{try{if(!/\.bilibili\.com$/.test(location.hostname)){alert('请先打开任意 bilibili.com 的页面，再点此书签');return}var m=location.search.match(/[?&amp;]fid=(\d+)/);var fid=(m?m[1]:'')||'';try{fid=fid||localStorage.getItem('biliRandomFid')||''}catch(e){}if(!fid){var f=prompt('输入收藏夹fid（收藏夹链接里fid=后面的数字）：');if(!f)return;if(!/^\d+$/.test(f)){alert('fid应为纯数字');return}fid=f}try{localStorage.setItem('biliRandomFid',fid)}catch(e){}var g=async p=&gt;(await(await fetch('https://api.bilibili.com/x/v3/fav/resource/list?media_id='+fid+'&amp;pn='+p+'&amp;ps=20&amp;type=0&amp;need_api_username=true',{credentials:'include'})).json()).data;var d=await g(1);if(!d){alert('收藏夹不存在、已删除或未公开');return}var n=d.info.media_count|0;if(!n){alert('这个收藏夹是空的');return}var got=null;for(var t=0;t&lt;10&amp;&amp;!got;t++){var i=Math.floor(Math.random()*n),pn=(i/20|0)+1,ps=i%20;var it=(pn===1?d:await g(pn)).medias[ps];if(it&amp;&amp;it.bv_id&amp;&amp;it.title!=='-1'&amp;&amp;((it.attr|0)&amp;1)===0)got={i:i,it:it}}if(!got){alert('连续多次抽中失效视频，请稍后再试');return}var i=got.i,it=got.it;var act=prompt('%23'+(i+1)+' '+it.title+'\nUP: '+(it.upper?it.upper.name:'-')+'\nBV: '+it.bv_id+'\n\n点「确定」打开视频；文本可选中复制','https://www.bilibili.com/video/'+it.bv_id);if(act)window.open(act)}catch(e){alert('出错：'+(e&amp;&amp;e.message||e))}})()">🎲 B站收藏夹抽签（把我拖到书签栏）</a>
+
+<p><b>方式二：手动粘贴</b> —— 复制下面全部代码 → Chrome 菜单 → 书签 → 书签管理器 → 右上角 ⋮ → 「添加新书签」→ 名称随意、网址粘贴代码 → 保存。</p>
+<textarea id="code" readonly></textarea>
+<p><button id="copyBtn">📋 复制代码</button> <span class="note" id="copyTip"></span></p>
+
+<h2>使用</h2>
+<ol>
+  <li>在 B 站打开你的收藏夹页面（地址栏带 <code>fid=xxx</code>），点书签栏的「🎲 B站收藏夹抽签」；</li>
+  <li>弹窗显示抽中的视频（序号/标题/BV号/UP主），点「确定」新标签打开视频；</li>
+  <li>也可以在任意 bilibili 页面点书签，手动输入 fid 抽任意公开收藏夹。</li>
+</ol>
+<ul class="note">
+  <li>脚本跑在 B 站页面里、带着你的登录态，<b>公开 / 私密收藏夹都能抽</b>；失效视频自动跳过。</li>
+  <li>只在 bilibili.com 页面上有效（这正是它能绕开风控的原因）。</li>
+  <li>每次抽取 1~2 个请求，正常使用不会触发风控。</li>
+</ul>
+
+<script>
+(function(){
+  var a = document.getElementById('bm');
+  var ta = document.getElementById('code');
+  ta.value = a.getAttribute('href');
+  document.getElementById('copyBtn').onclick = function(){
+    ta.select();
+    try{
+      navigator.clipboard.writeText(ta.value).then(function(){
+        document.getElementById('copyTip').textContent = '已复制';
+      }, function(){
+        document.execCommand('copy');
+        document.getElementById('copyTip').textContent = '已复制';
+      });
+    }catch(e){ document.execCommand('copy'); document.getElementById('copyTip').textContent = '已复制'; }
+  };
+})();
+</script>
+</body>
+</html>
