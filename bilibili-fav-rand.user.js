@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         B站收藏夹抽签
-// @namespace    bili-random-fav
+// @namespace    bilibili-fav-rand
 // @version      1.2
 // @description  任意B站页面右下角悬浮按钮，一键随机抽取收藏夹视频并打开（自动跳过失效视频，支持私密收藏夹）。首次使用需输入一次fid，长按按钮可更换收藏夹。
 // @match        *://*.bilibili.com/*
