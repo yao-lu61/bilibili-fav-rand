@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B站抽签 · 书签脚本安装</title>
+<style>
+  body{font:15px/1.7 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;max-width:680px;margin:0 auto;padding:24px 16px;color:#18191c;background:#f5f6f8}
+  h1{font-size:20px;margin:0 0 12px}
+  h2{font-size:16px;margin:24px 0 8px}
+  .drag{display:block;text-align:center;padding:18px 10px;margin:12px 0;border:2px dashed #fb7299;border-radius:12px;
+        color:#fb7299;font-size:17px;font-weight:700;text-decoration:none;background:#fff}
+  .drag:active{background:#fff0f4}
+  code,pre,textarea{font:13px/1.5 Consolas,Menlo,monospace}
+  textarea{width:100%;height:150px;padding:10px;border:1px solid #e3e5e7;border-radius:8px;background:#fff;word-break:break-all}
+  button{padding:8px 16px;border:none;border-radius:8px;background:#fb7299;color:#fff;font-size:14px;cursor:pointer}
+  ol li,ul li{margin:6px 0}
+  .note{color:#9499a0;font-size:13px}
+</style>
+</head>
+<body>
+<h1>🎲 B站收藏夹抽签 · 书签脚本安装</h1>
+<p>装一次，之后在 B 站收藏夹页面点一下书签即可随机抽取。首次点击会<b>一次性读取收藏夹全部视频并缓存 24 小时</b>（期间抽取零请求、失效视频自动剔除）。无需任何服务、无需部署。</p>
+
+<h2>安装（二选一）</h2>
+<p><b>方式一（推荐）：拖拽</b> —— 显示书签栏（Ctrl+Shift+B），然后把下面这个按钮<b>按住拖到书签栏</b>松手：</p>
+<a id="bm" class="drag" href="javascript:(async()=>{try{if(!/\.bilibili\.com$/.test(location.hostname)){alert('请先打开任意 bilibili.com 的页面，再点此书签');return}var m=location.search.match(/[?&amp;]fid=(\d+)/);var fid=(m?m[1]:'')||'';var force=/[?&amp;]refresh=1/.test(location.search);try{fid=fid||localStorage.getItem('biliRandomFid')||''}catch(e){}if(!fid){var f=prompt('输入收藏夹fid（收藏夹链接里fid=后面的数字）：');if(!f)return;if(!/^\d+$/.test(f)){alert('fid应为纯数字');return}fid=f}try{localStorage.setItem('biliRandomFid',fid)}catch(e){}var CK='biliRandomCache:'+fid,alive=null;if(!force){try{var c=JSON.parse(localStorage.getItem(CK)||'null');if(c&amp;&amp;Date.now()-c.ts&lt;86400000&amp;&amp;c.alive&amp;&amp;c.alive.length)alive=c.alive}catch(e){}}var last=0;var g=async p=&gt;{var w=last+500-Date.now();if(w&gt;0)await new Promise(r=&gt;setTimeout(r,w));last=Date.now();var r=await fetch('https://api.bilibili.com/x/v3/fav/resource/list?media_id='+fid+'&amp;pn='+p+'&amp;ps=20&amp;type=0&amp;need_api_username=true',{credentials:'include'});var t=await r.text();var j;try{j=JSON.parse(t)}catch(e){throw{risk:true}}if(j.code===-352||j.code===403)throw{risk:true};return j.data};if(!alive){var d=await g(1);if(!d){alert('收藏夹不存在、已删除或未公开');return}var n=d.info.media_count|0;if(!n){alert('这个收藏夹是空的');return}var pages=Math.ceil(n/20);alive=[];for(var p=1;p&lt;=pages;p++){var medias=p===1?d.medias:((await g(p))||{}).medias||[];for(var k=0;k&lt;medias.length;k++){var x=medias[k];if(x&amp;&amp;x.bv_id&amp;&amp;x.title!=='-1'&amp;&amp;((x.attr|0)&amp;1)===0)alive.push({i:(p-1)*20+k,t:x.title,u:(x.upper&amp;&amp;x.upper.name)||'-',b:x.bv_id})}}if(!alive.length){alert('这个收藏夹里没有可播放的视频（可能大多已失效）');return}try{localStorage.setItem(CK,JSON.stringify({ts:Date.now(),alive:alive}))}catch(e){}}var pick=alive[Math.floor(Math.random()*alive.length)];if(confirm('%23'+(pick.i+1)+' '+pick.t+'\nUP: '+pick.u+'\nBV: '+pick.b+'\n\n确定打开视频？'))window.open('https://www.bilibili.com/video/'+pick.b)}catch(e){alert(e&amp;&amp;e.risk?'已触发B站风控（请求过多）：请等待几分钟再试':('出错：'+(e&amp;&amp;e.message||e)))}})()">🎲 B站收藏夹抽签（把我拖到书签栏）</a>
+
+<p><b>方式二：手动粘贴</b> —— 复制下面全部代码 → Chrome 菜单 → 书签 → 书签管理器 → 右上角 ⋮ → 「添加新书签」→ 名称随意、网址粘贴代码 → 保存。</p>
+<textarea id="code" readonly></textarea>
+<p><button id="copyBtn">📋 复制代码</button> <span class="note" id="copyTip"></span></p>
+
+<h2>使用</h2>
+<ol>
+  <li>在 B 站打开你的收藏夹页面（地址栏带 <code>fid=xxx</code>），点书签栏的「🎲 B站收藏夹抽签」；</li>
+  <li>弹窗显示抽中的视频（序号/标题/UP主/BV号），点「确定」新标签打开视频；</li>
+  <li>也可以在任意 bilibili 页面点书签，手动输入 fid 抽其他收藏夹（含私密收藏夹）。</li>
+</ol>
+<ul class="note">
+  <li>首次点击会一次性读取收藏夹全部视频（按钮所在标签页标题会显示读取进度）并缓存 <b>24 小时</b>，期间抽取零请求；失效视频读取时即被剔除。</li>
+  <li>想强制刷新缓存：在收藏夹页面地址栏的 fid 参数后追加 <code>&amp;refresh=1</code> 回车，再点书签。</li>
+  <li>脚本带着你的登录态，跑在 B 站页面里；每次全量读取约需 页数×0.5秒，内置请求间隔，正常使用不易触发风控。</li>
+</ul>
+
+<script>
+(function(){
+  var a = document.getElementById('bm');
+  var ta = document.getElementById('code');
+  ta.value = a.getAttribute('href');
+  document.getElementById('copyBtn').onclick = function(){
+    ta.select();
+    try{
+      navigator.clipboard.writeText(ta.value).then(function(){
+        document.getElementById('copyTip').textContent = '已复制';
+      }, function(){
+        document.execCommand('copy');
+        document.getElementById('copyTip').textContent = '已复制';
+      });
+    }catch(e){ document.execCommand('copy'); document.getElementById('copyTip').textContent = '已复制'; }
+  };
+})();
+</script>
+</body>
+</html>
